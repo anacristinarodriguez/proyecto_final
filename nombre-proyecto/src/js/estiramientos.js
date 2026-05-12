@@ -16,12 +16,13 @@ const EXERCISES = [
 ];
 
 // ── State ─────────────────────────────────────────────────
-let tmModel, webcam;
-let step       = 0;
-let tmState    = 'loading';
-let holdStart  = null;
+let tmModel;
+let videoEl, inferCanvas, inferCtx; // cámara nativa
+let step      = 0;
+let tmState   = 'loading';
+let holdStart = null;
 let predicting = false;
-let ui         = {};
+let ui = {};
 
 // ── Init ──────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', () => {
@@ -35,25 +36,12 @@ async function loadModel() {
     tmModel = await tmPose.load(TM_URL + 'model.json', TM_URL + 'metadata.json');
 
     setStatus('Activando cámara…');
-
-    webcam = new tmPose.Webcam(200, 150, true);
-    await webcam.setup({ facingMode: 'user' });
-    await webcam.play();
-
-    // Forzar visibilidad del canvas de TM
-    Object.assign(webcam.canvas.style, {
-      display:      'block',
-      width:        '100%',
-      height:       '100%',
-      objectFit:    'cover',
-      borderRadius: '10px',
-    });
-    ui.webcamWrap.appendChild(webcam.canvas);
+    await startCamera();
 
     setExercise(0);
     tmState = 'ready';
     setStatus('Prepárate y adopta la posición');
-    requestAnimationFrame(loop);
+    requestAnimationFrame(predictionLoop);
 
   } catch (e) {
     tmState = 'error';
@@ -62,46 +50,78 @@ async function loadModel() {
   }
 }
 
+// ── Cámara nativa con getUserMedia ────────────────────────
+async function startCamera() {
+  const stream = await navigator.mediaDevices.getUserMedia({
+    video: { facingMode: 'user', width: 200, height: 150 },
+    audio: false,
+  });
+
+  // Video visible en el panel
+  videoEl = document.createElement('video');
+  videoEl.srcObject   = stream;
+  videoEl.autoplay    = true;
+  videoEl.playsInline = true;
+  videoEl.muted       = true;
+  Object.assign(videoEl.style, {
+    width:     '100%',
+    height:    '100%',
+    objectFit: 'cover',
+    display:   'block',
+    borderRadius: '10px',
+  });
+  ui.webcamWrap.appendChild(videoEl);
+
+  // Canvas offscreen solo para inferencia de TM (no se muestra)
+  inferCanvas        = document.createElement('canvas');
+  inferCanvas.width  = 200;
+  inferCanvas.height = 150;
+  inferCtx           = inferCanvas.getContext('2d');
+
+  // Espera a que el video esté listo
+  await new Promise(resolve => { videoEl.onloadeddata = resolve; });
+}
+
 // ── Loop de predicción ────────────────────────────────────
-async function loop() {
+async function predictionLoop() {               // ← renombrado
   if (tmState === 'done' || tmState === 'error') return;
 
-  if (!predicting) {
+  if (!predicting && videoEl && videoEl.readyState >= 2) {
     predicting = true;
-    webcam.update();
+    try {
+      inferCtx.drawImage(videoEl, 0, 0, 200, 150);
+      const { posenetOutput } = await tmModel.estimatePose(inferCanvas);
+      const preds             = await tmModel.predict(posenetOutput);
 
-    const { posenetOutput } = await tmModel.estimatePose(webcam.canvas);
-    const preds             = await tmModel.predict(posenetOutput);
+      const target = EXERCISES[step].pose;
+      const hit    = preds.find(p => p.className === target);
+      const conf   = hit ? hit.probability : 0;
 
-    const target = EXERCISES[step].pose;
-    const hit    = preds.find(p => p.className === target);
-    const conf   = hit ? hit.probability : 0;
-
-    if (conf >= MIN_CONF) {
-      if (tmState === 'ready') {
-        tmState   = 'holding';
-        holdStart = Date.now();
-        setStatus('¡Perfecto! Mantén la posición');
+      if (conf >= MIN_CONF) {
+        if (tmState === 'ready') {
+          tmState   = 'holding';
+          holdStart = Date.now();
+          setStatus('¡Perfecto! Mantén la posición');
+        }
+        const elapsed = (Date.now() - holdStart) / 1000;
+        updateTimer(elapsed);
+        if (elapsed >= HOLD_SEC) nextExercise();
+      } else {
+        if (tmState === 'holding') {
+          tmState   = 'ready';
+          holdStart = null;
+          updateTimer(0);
+          setStatus('Perdiste la posición — vuelve a intentarlo');
+        }
       }
-      const elapsed = (Date.now() - holdStart) / 1000;
-      updateTimer(elapsed);
-
-      if (elapsed >= HOLD_SEC) {
-        nextExercise();
-      }
-    } else {
-      if (tmState === 'holding') {
-        tmState   = 'ready';
-        holdStart = null;
-        updateTimer(0);
-        setStatus('Perdiste la posición — vuelve a intentarlo');
-      }
+    } catch(e) {
+      console.error('Error en predicción:', e);
+    } finally {
+      predicting = false;
     }
-
-    predicting = false;
   }
 
-  requestAnimationFrame(loop);
+  requestAnimationFrame(predictionLoop);        // ← renombrado
 }
 
 function nextExercise() {
@@ -115,7 +135,10 @@ function nextExercise() {
     ui.instruction.textContent = 'Hiciste todos los estiramientos';
     setStatus('Tu cuerpo te lo agradece 🌿');
     updateTimer(HOLD_SEC);
-    webcam.stop();
+    // Detiene la cámara
+    if (videoEl && videoEl.srcObject) {
+      videoEl.srcObject.getTracks().forEach(t => t.stop());
+    }
   } else {
     tmState = 'ready';
     setExercise(step);
@@ -155,27 +178,27 @@ function updateTimer(elapsed) {
 // ── Build UI panel ────────────────────────────────────────
 function buildUI() {
   const panel = el('div', {
-    position:             'fixed',
-    top:                  '50%',
-    left:                 '50%',
-    transform:            'translate(-50%, -50%)',
-    zIndex:               '999',
-    width:                'min(500px, 88vw)',
-    padding:              '2.2rem 2.5rem 2rem',
-    background:           'rgba(255,255,255,0.10)',
-    backdropFilter:       'blur(18px)',
+    position:        'fixed',
+    top:             '50%',
+    left:            '50%',
+    transform:       'translate(-50%, -50%)',
+    zIndex:          '999',
+    width:           'min(500px, 88vw)',
+    padding:         '2.2rem 2.5rem 2rem',
+    background:      'rgba(255,255,255,0.10)',
+    backdropFilter:  'blur(18px)',
     webkitBackdropFilter: 'blur(18px)',
-    borderRadius:         '22px',
-    border:               '1px solid rgba(181,211,255,0.22)',
-    boxShadow:            '0 10px 48px rgba(0,0,0,0.28)',
-    color:                '#fff',
-    fontFamily:           'system-ui, sans-serif',
-    display:              'flex',
-    flexDirection:        'column',
-    alignItems:           'center',
-    gap:                  '0.9rem',
-    textAlign:            'center',
-    boxSizing:            'border-box',
+    borderRadius:    '22px',
+    border:          '1px solid rgba(181,211,255,0.22)',
+    boxShadow:       '0 10px 48px rgba(0,0,0,0.28)',
+    color:           '#fff',
+    fontFamily:      'system-ui, sans-serif',
+    display:         'flex',
+    flexDirection:   'column',
+    alignItems:      'center',
+    gap:             '0.9rem',
+    textAlign:       'center',
+    boxSizing:       'border-box',
   });
 
   const label = el('p', {
@@ -209,22 +232,17 @@ function buildUI() {
   // Timer ring
   const R = 40;
   const C = 2 * Math.PI * R;
-  const timerWrap = el('div', {
-    position: 'relative', width: '96px', height: '96px', flexShrink: '0',
-  });
+  const timerWrap = el('div', { position: 'relative', width: '96px', height: '96px', flexShrink: '0' });
 
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svg.setAttribute('viewBox', '0 0 96 96');
-  Object.assign(svg.style, {
-    width: '96px', height: '96px',
-    transform: 'rotate(-90deg)', display: 'block',
-  });
+  Object.assign(svg.style, { width: '96px', height: '96px', transform: 'rotate(-90deg)', display: 'block' });
 
   const track = svgCircle(48, 48, R, 'rgba(255,255,255,0.12)', 7);
   const ring  = svgCircle(48, 48, R, '#B5D3FF', 7);
-  ring.setAttribute('stroke-linecap',   'round');
-  ring.setAttribute('stroke-dasharray',  C);
-  ring.setAttribute('stroke-dashoffset', C);
+  ring.setAttribute('stroke-linecap',    'round');
+  ring.setAttribute('stroke-dasharray',   C);
+  ring.setAttribute('stroke-dashoffset',  C);
   svg.append(track, ring);
 
   const timerText = el('div', {
@@ -235,7 +253,7 @@ function buildUI() {
   timerText.textContent = '0';
   timerWrap.append(svg, timerText);
 
-  // Webcam wrapper
+  // Webcam wrapper — el video se inserta aquí
   const webcamWrap = el('div', {
     borderRadius: '10px',
     overflow:     'hidden',
@@ -261,8 +279,8 @@ function el(tag, styles = {}) {
 
 function svgCircle(cx, cy, r, stroke, strokeWidth) {
   const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-  c.setAttribute('cx', cx);       c.setAttribute('cy', cy);
-  c.setAttribute('r',  r);        c.setAttribute('fill', 'none');
+  c.setAttribute('cx', cx); c.setAttribute('cy', cy);
+  c.setAttribute('r', r);   c.setAttribute('fill', 'none');
   c.setAttribute('stroke', stroke);
   c.setAttribute('stroke-width', strokeWidth);
   return c;
