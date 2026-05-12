@@ -1,3 +1,16 @@
+
+:root{
+    --azul-oscuro: rgb(108, 146, 203);
+    --azul-claro: rgb(181, 211, 255);
+    --verde-oscuro: rgb(100, 105, 75);
+    --verde-claro: rgb(177, 182, 157);
+    --amarillo: rgb(255, 241, 181)
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
 body {
       padding: 0;
       margin: 0;
@@ -57,14 +70,41 @@ body {
 
       /* ----------- HERO ----------- */
 
-      .hero {
-        position: relative;   /* ← esto */
-        z-index: 1;           /* ← y esto */
+    .hero {
+        position: relative;   
+        z-index: 1;           
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        height: 100vh;
+        width: 600px;
+        height: 250px;
+        padding: 3rem 2.5rem;
+        margin: 20vh auto; /* espacio arriba y centrado horizontal */
         text-align: center;
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(10px);
+        border-radius: 16px;
+    }
+
+    .hero h1{
+    color: var(--azul-oscuro);
+    }
+
+    .hero p{
+        color: black;
+    }
+
+    .hero a{
+        background-color: var(--verde-claro);
+        border: none;
+        padding: 1rem 3rem;
+        border-radius: 10px;
+        text-decoration: none;
+        color: black;
+    }
+
+    .hero a:hover{
+        background-color: var(--verde-oscuro);
         color: white;
-        }
+    }
