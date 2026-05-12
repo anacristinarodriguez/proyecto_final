@@ -1,0 +1,70 @@
+body {
+      padding: 0;
+      margin: 0;
+      background-color: #000000;
+    }
+
+/* ── Navbar ─────────────────────────────────────────── */
+    nav {
+      position: fixed;
+      width: 100%;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2rem;
+      height: 56px;
+      background: white;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid rgba(181, 211, 255, 0.18);
+    }
+
+    .logo {
+      width: 50px;
+      height: auto;
+    }
+ 
+ 
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      list-style: none;
+    }
+ 
+    .nav-links a {
+      text-decoration: none;
+      font-size: 0.85rem;
+      letter-spacing: 0.06em;
+      color: #000000;
+      transition: color 0.3s ease;
+    }
+ 
+    .nav-links a:hover {
+      color: #B5D3FF;
+    }
+ 
+    .nav-links a.active {
+      color: #2267ce;
+      border-bottom: 1px solid #6C92CB;
+      padding-bottom: 2px;
+    }
+ 
+    /* ── Canvas sits below navbar ────────────────────────── */
+    main {
+      padding-top: 56px;
+    }
+
+      /* ----------- HERO ----------- */
+
+      .hero {
+        position: relative;   /* ← esto */
+        z-index: 1;           /* ← y esto */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        text-align: center;
+        color: white;
+        }
