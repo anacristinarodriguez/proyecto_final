@@ -9,10 +9,10 @@ const HOLD_SEC = 5;
 const MIN_CONF = 0.80;
 
 const EXERCISES = [
-  { pose: 'Cuello-der', label: 'Estiramiento 1 de 4', instruction: 'Inclina el cuello hacia la derecha',  img: './src/assets/cuello-der.png' },
-  { pose: 'Cuello-izq', label: 'Estiramiento 2 de 4', instruction: 'Inclina el cuello hacia la izquierda', img: './src/assets/cuello-izq.png' },
-  { pose: 'brazo-der',  label: 'Estiramiento 3 de 4', instruction: 'Estira el brazo derecho hacia afuera', img: './src/assets/brazo-der.jpg'  },
-  { pose: 'brazo-izq',  label: 'Estiramiento 4 de 4', instruction: 'Estira el brazo izquierdo hacia afuera',img: './src/assets/brazo-izq.png'  },
+  { pose: 'Cuello-der', label: 'Estiramiento 1 de 4', instruction: 'Inclina el cuello hacia la derecha',  img: 'public/assets/cuello-der.png' },
+  { pose: 'Cuello-izq', label: 'Estiramiento 2 de 4', instruction: 'Inclina el cuello hacia la izquierda', img: 'public/assets/cuello-izq.png' },
+  { pose: 'brazo-der',  label: 'Estiramiento 3 de 4', instruction: 'Estira el brazo izquierdo hacia afuera', img: 'public/assets/brazo-der.jpg'  },
+  { pose: 'brazo-izq',  label: 'Estiramiento 4 de 4', instruction: 'Estira el brazo derecho hacia afuera',img: 'public/assets/brazo-izq.png'  },
 ];
 
 // ── State ─────────────────────────────────────────────────

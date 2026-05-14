@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
+
 
 :root{
     --azul-oscuro: rgb(108, 146, 203);
@@ -27,7 +29,7 @@ body {
       justify-content: space-between;
       padding: 0 2rem;
       height: 56px;
-      background: white;
+      background: rgba(255, 255, 255, 0.30);
       backdrop-filter: blur(14px);
       -webkit-backdrop-filter: blur(14px);
       border-bottom: 1px solid rgba(181, 211, 255, 0.18);
@@ -41,16 +43,17 @@ body {
  
     .nav-links {
       display: flex;
-      gap: 2rem;
+      gap: 3rem;
       list-style: none;
     }
  
     .nav-links a {
       text-decoration: none;
-      font-size: 0.85rem;
-      letter-spacing: 0.06em;
-      color: #000000;
+      font-size: 1rem;
+      letter-spacing: 0.2em;
+      color: #ffffff;
       transition: color 0.3s ease;
+      font-family: "Roboto", sans-serif;
     }
  
     .nav-links a:hover {
@@ -106,3 +109,70 @@ body {
         background-color: var(--verde-oscuro);
         color: white;
     }
+
+ /* ----------- ESTIRAMIENTOS ----------- */
+.container-ej {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: row;        /* tarjetas en fila */
+  flex-wrap: wrap;            /* se ajustan si no caben */
+  align-items: stretch;
+  justify-content: center;
+  gap: 2.5rem;
+  padding: 2rem;
+  margin: 10vh auto 0;
+  max-width: 90vw;
+}
+
+.card-link{
+  text-decoration: none;
+  display: contents;
+}
+
+.card {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  width: 280px;
+  padding: 2.5rem 1.5rem;
+  background: rgba(255, 255, 255, 0.10);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(181, 211, 255, 0.22);
+  border-radius: 18px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.25);
+  color: #fff;
+  font-family: "Roboto", sans-serif;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.35);
+}
+
+.card h2 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  min-height: 2.8rem;
+  display: flex;
+  align-items: flex-start;
+}
+
+.card p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.65);
+  line-height: 1.5;
+}
+
+.card img{
+  height: 300px;
+  width: auto;
+  border-radius: 10px;
+}
