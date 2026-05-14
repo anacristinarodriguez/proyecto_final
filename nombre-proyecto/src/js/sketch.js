@@ -1,8 +1,8 @@
 // ── Palette ──────────────────────────────────────────────
 const PALE_BLUE = '#B5D3FF';
 const MID_BLUE  = '#6C92CB';
-const SAGE      = '#B1B69D';
-const OLIVE     = '#64694B';
+const SAGE      = '#a6c1e2';
+const OLIVE     = '#305066';
 
 let time = 0;
 let orbs  = [];
